@@ -238,6 +238,20 @@ test('defaultHash', function (t) {
     t.end();
 });
 
+test('demandZero', function (t) {
+    var r = checkUsage(function () {
+        return optimist(['-x', '0'])
+            .demand(['x'])
+            .argv;
+    });
+    t.same(r.result, {
+        _ : [],
+        $0 : './usage',
+        x : 0
+    });
+    t.end();
+});
+
 test('rebase', function (t) {
     t.equal(
         optimist.rebase('/home/substack', '/home/substack/foo/bar/baz'),
