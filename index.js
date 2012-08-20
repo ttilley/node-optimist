@@ -116,9 +116,33 @@ function Argv (args, cwd) {
         return self;
     };
 
+    // This core loging helper will work in the only two environments I am
+    // currently able to test with: Node.js and PhantomJS. Logging will be
+    // performed with the correct lower-level idiom, even if console.error
+    // has been overwritten:
+    //
+    // ~~~
+    // > console.error = function(){};
+    // > console.error('should not output');
+    // > var core_log_error = <trimmed for brevity>;
+    // > core_log_error('should output');
+    //   should output
+    // > console.error('still should not output');
+    // ~~~
+    var core_log_error = (function() {
+        if (typeof process !== "undefined" && process !== null) {
+            return function(msg) { process.stderr.write("" + msg + "\n"); };
+        }
+        console._original_error = console.error, delete console.error;
+        var best_error = (console.error != null
+            ? console.error : console._original_error).bind(console);
+        console.error = console._original_error, delete console._original_error;
+        return best_error;
+    })();
+
     function fail (msg) {
         self.showHelp();
-        if (msg) console.error(msg);
+        if (msg) core_log_error(msg);
         process.exit(1);
     }
 
@@ -195,7 +219,7 @@ function Argv (args, cwd) {
     };
 
     self.showHelp = function (fn) {
-        if (!fn) fn = console.error;
+        if (!fn) fn = core_log_error;
         fn(self.help());
     };
 
