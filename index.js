@@ -9,6 +9,30 @@ var wordwrap = require('wordwrap');
     to get a parsed version of process.argv.
 */
 
+// This core loging helper will work in the only two environments I am
+// currently able to test with: Node.js and PhantomJS. Logging will be
+// performed with the correct lower-level idiom, even if console.error
+// has been overwritten:
+//
+// ~~~
+// > console.error = function(){};
+// > console.error('should not output');
+// > var core_log_error = <trimmed for brevity>;
+// > core_log_error('should output');
+//   should output
+// > console.error('still should not output');
+// ~~~
+var core_log_error = (function() {
+    if (typeof process !== "undefined" && process !== null) {
+        return function(msg) { process.stderr.write("" + msg + "\n"); };
+    }
+    console._original_error = console.error, delete console.error;
+    var best_error = (console.error != null
+        ? console.error : console._original_error).bind(console);
+    console.error = console._original_error, delete console._original_error;
+    return best_error;
+})();
+
 var inst = Argv(process.argv.slice(2));
 Object.keys(inst).forEach(function (key) {
     Argv[key] = typeof inst[key] == 'function'
@@ -116,33 +140,11 @@ function Argv (args, cwd) {
         return self;
     };
 
-    // This core loging helper will work in the only two environments I am
-    // currently able to test with: Node.js and PhantomJS. Logging will be
-    // performed with the correct lower-level idiom, even if console.error
-    // has been overwritten:
-    //
-    // ~~~
-    // > console.error = function(){};
-    // > console.error('should not output');
-    // > var core_log_error = <trimmed for brevity>;
-    // > core_log_error('should output');
-    //   should output
-    // > console.error('still should not output');
-    // ~~~
-    var core_log_error = (function() {
-        if (typeof process !== "undefined" && process !== null) {
-            return function(msg) { process.stderr.write("" + msg + "\n"); };
-        }
-        console._original_error = console.error, delete console.error;
-        var best_error = (console.error != null
-            ? console.error : console._original_error).bind(console);
-        console.error = console._original_error, delete console._original_error;
-        return best_error;
-    })();
+    self.log_error = Argv.log_error || core_log_error;
 
-    function fail (msg) {
+    self.fail = function (msg) {
         self.showHelp();
-        if (msg) core_log_error(msg);
+        if (msg) self.log_error(msg);
         process.exit(1);
     }
 
@@ -219,7 +221,7 @@ function Argv (args, cwd) {
     };
 
     self.showHelp = function (fn) {
-        if (!fn) fn = core_log_error;
+        if (!fn) fn = self.log_error;
         fn(self.help());
     };
 
@@ -425,7 +427,7 @@ function Argv (args, cwd) {
         });
 
         if (demanded._ && argv._.length < demanded._) {
-            fail('Not enough non-option arguments: got '
+            self.fail('Not enough non-option arguments: got '
                 + argv._.length + ', need at least ' + demanded._
             );
         }
@@ -436,7 +438,7 @@ function Argv (args, cwd) {
         });
 
         if (missing.length) {
-            fail('Missing required arguments: ' + missing.join(', '));
+            self.fail('Missing required arguments: ' + missing.join(', '));
         }
 
         checks.forEach(function (f) {
@@ -444,13 +446,13 @@ function Argv (args, cwd) {
             try {
                 result = f(argv);
                 if (result === false) {
-                    fail('Argument check failed: ' + f.toString());
+                    self.fail('Argument check failed: ' + f.toString());
                 } else if (typeof result === 'string') {
-                    fail(result);
+                    self.fail(result);
                 }
             }
             catch (err) {
-                fail(err)
+                self.fail(err)
             }
         });
 

@@ -24,7 +24,6 @@ test('usageFail', function (t) {
             'Missing required arguments: y',
         ]
     );
-    t.same(r.logs, []);
     t.ok(r.exit);
     t.end();
 });
@@ -40,7 +39,6 @@ test('usagePass', function (t) {
     t.same(r, {
         result : { x : 10, y : 20, _ : [], $0 : './usage' },
         errors : [],
-        logs : [],
         exit : false,
     });
     t.end();
@@ -59,7 +57,6 @@ test('checkPass', function (t) {
     t.same(r, {
         result : { x : 10, y : 20, _ : [], $0 : './usage' },
         errors : [],
-        logs : [],
         exit : false,
     });
     t.end();
@@ -89,7 +86,6 @@ test('checkFail', function (t) {
         ]
     );
 
-    t.same(r.logs, []);
     t.ok(r.exit);
     t.end();
 });
@@ -118,7 +114,6 @@ test('checkFailReturn', function (t) {
         ]
     );
 
-    t.same(r.logs, []);
     t.ok(r.exit);
     t.end();
 });
@@ -137,7 +132,6 @@ test('checkCondPass', function (t) {
     t.same(r, {
         result : { x : 10, y : 20, _ : [], $0 : './usage' },
         errors : [],
-        logs : [],
         exit : false,
     });
     t.end();
@@ -166,7 +160,6 @@ test('checkCondFail', function (t) {
         + 'Argument check failed: ' + checker.toString()
     );
 
-    t.same(r.logs, []);
     t.ok(r.exit);
     t.end();
 });
@@ -181,7 +174,6 @@ test('countPass', function (t) {
     t.same(r, {
         result : { _ : [ '1', '2', '3' ], moo : true, $0 : './usage' },
         errors : [],
-        logs : [],
         exit : false,
     });
     t.end();
@@ -207,7 +199,6 @@ test('countFail', function (t) {
         ]
     );
 
-    t.same(r.logs, []);
     t.ok(r.exit);
     t.end();
 });
@@ -310,12 +301,9 @@ function checkUsage (f) {
     process.argv = [ './usage' ];
 
     var errors = [];
-    var logs = [];
 
-    console._error = console.error;
-    console.error = function (msg) { errors.push(msg) };
-    console._log = console.log;
-    console.log = function (msg) { logs.push(msg) };
+    optimist._log_error = optimist.log_error;
+    optimist.log_error = function (msg) { errors.push(msg); };
 
     var result = f();
 
@@ -323,12 +311,10 @@ function checkUsage (f) {
     process.env = process._env;
     process.argv = process._argv;
 
-    console.error = console._error;
-    console.log = console._log;
+    optimist.log_error = optimist._log_error;
 
     return {
         errors : errors,
-        logs : logs,
         exit : exit,
         result : result,
     };
