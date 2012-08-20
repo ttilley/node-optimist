@@ -7,7 +7,15 @@ and -whistlz of program usage but think optstrings are a waste of time.
 
 With optimist, option parsing doesn't have to suck (as much).
 
-[![build status](https://secure.travis-ci.org/substack/node-optimist.png)](http://travis-ci.org/substack/node-optimist)
+| repo                   | status                                              |
+|:-----------------------|:---------------------------------------------------:|
+| substack/node-optimist | [![build status][substack_ci_img]][substack_ci_url] |
+| ttilley/node-optimist  | [![build status][ttilley_ci_img]][ttilley_ci_url]   |
+
+[substack_ci_img]: https://secure.travis-ci.org/substack/node-optimist.png
+[substack_ci_url]: http://travis-ci.org/substack/node-optimist
+[ttilley_ci_img]: https://secure.travis-ci.org/ttilley/node-optimist.png
+[ttilley_ci_url]: http://travis-ci.org/ttilley/node-optimist
 
 examples
 ========
