@@ -28,7 +28,6 @@ test('usageFail', function (t) {
     t.end();
 });
 
-
 test('usagePass', function (t) {
     var r = checkUsage(function () {
         return optimist('-x 10 -y 20'.split(' '))
